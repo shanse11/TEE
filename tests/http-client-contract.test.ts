@@ -41,6 +41,25 @@ function requestAt(fetcher: ReturnType<typeof vi.fn>, index: number) {
 }
 
 describe("HttpClient 接口契约", () => {
+  it("浏览器始终使用同源相对路径并保留登录 Cookie", async () => {
+    vi.stubGlobal("window", {});
+
+    try {
+      const { client, fetcher } = createTestClient();
+      fetcher.mockResolvedValueOnce(jsonResponse([dailyIssueJson]));
+
+      await client.getDailyIssues();
+
+      expect(requestAt(fetcher, 0)).toEqual({
+        url: "/api/daily-issues",
+        method: "GET",
+        body: undefined,
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("映射新闻搜索与带筛选条件的查询接口", async () => {
     const { client, fetcher } = createTestClient();
     const newsItems = newsArticlesJson.slice(0, 4);

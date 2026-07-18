@@ -27,12 +27,12 @@ type HttpClientOptions = {
 };
 
 function resolveUrl(path: string, baseUrl?: string) {
-  if (baseUrl) {
-    return new URL(path, baseUrl).toString();
-  }
-
   if (typeof window !== "undefined") {
     return path;
+  }
+
+  if (baseUrl) {
+    return new URL(path, baseUrl).toString();
   }
 
   throw new TodayPaperApiError({
