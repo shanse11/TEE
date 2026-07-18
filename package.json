@@ -14,7 +14,7 @@
     "typecheck:frontend": "tsc --noEmit -p tsconfig.frontend.json",
     "test": "vitest run",
     "test:backend": "vitest run tests/backend",
-    "test:frontend": "vitest run tests/subscription-validation.test.ts tests/generation-workflow.test.ts tests/poster-workflows.test.ts tests/http-client-contract.test.ts",
+    "test:frontend": "vitest run tests/auth-validation.test.ts tests/subscription-validation.test.ts tests/generation-workflow.test.ts tests/poster-workflows.test.ts tests/http-client-contract.test.ts",
     "test:watch": "vitest",
     "validate:data": "tsx scripts/validate-demo-data.ts",
     "validate:api": "tsx scripts/smoke-api-adapter.ts",

@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = [
+export const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/account",
   "/onboarding",
   "/subscriptions",
   "/creations",

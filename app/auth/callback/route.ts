@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
+import { safeInternalPath } from "@/lib/auth/redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const nextValue = url.searchParams.get("next");
-  const next =
-    nextValue?.startsWith("/") && !nextValue.startsWith("//")
-      ? nextValue
-      : "/dashboard";
+  const next = safeInternalPath(url.searchParams.get("next"));
   if (code) {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);

@@ -451,7 +451,7 @@ export function DashboardClient({
           </div>
         ) : (
           <p className="mt-5 rounded-md border border-dashed border-line-strong p-5 text-sm text-muted-ink">
-            暂无已生成日报，完成首次生成后会保存在这里。
+            还没有历史日报。订阅主题后，TodayPaper 会每天为你生成日报。
           </p>
         )}
       </section>

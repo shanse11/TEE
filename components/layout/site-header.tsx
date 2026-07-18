@@ -23,7 +23,7 @@ export async function SiteHeader() {
           {user ? (
             <div className="flex items-center gap-1">
               <Button asChild variant="ghost" size="sm">
-                <Link href="/dashboard">
+                <Link href="/account">
                   <UserRound />
                   {user.email ?? "进入主页"}
                 </Link>
@@ -37,15 +37,20 @@ export async function SiteHeader() {
               ) : null}
             </div>
           ) : (
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/login">
-                <UserRound />
-                登录
-              </Link>
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/login">
+                  <UserRound />
+                  登录
+                </Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href="/register">注册</Link>
+              </Button>
+            </div>
           )}
         </div>
-        <MobileNav />
+        <MobileNav authenticated={Boolean(user)} />
       </PageContainer>
     </header>
   );

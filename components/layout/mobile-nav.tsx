@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { siteNavigation } from "./navigation";
 
-export function MobileNav() {
+export function MobileNav({ authenticated }: { authenticated: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -94,6 +94,32 @@ export function MobileNav() {
                 </Link>
               );
             })}
+            {authenticated ? (
+              <Link
+                href="/account"
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-3 text-sm font-medium text-muted-ink hover:bg-soft hover:text-brand"
+              >
+                我的账户
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md px-3 py-3 text-sm font-medium text-muted-ink hover:bg-soft hover:text-brand"
+                >
+                  登录
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md px-3 py-3 text-sm font-medium text-brand hover:bg-soft"
+                >
+                  注册
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       )}
