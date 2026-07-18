@@ -7,7 +7,6 @@ import {
   findDuplicateGroups,
   isDuplicate,
   jaccardSimilarity,
-  normalizeTitle,
 } from "@/lib/news/dedup";
 
 function ranked(opts: {

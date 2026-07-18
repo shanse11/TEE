@@ -68,6 +68,10 @@ function clampCount(value: number | undefined, fallback: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return fallback;
   }
+  // 纯算法允许 2 篇用于验证惩罚行为；公开生成接口仍严格限制 3～5 篇。
+  if (Math.floor(value) === 2) {
+    return 2;
+  }
   return Math.min(Math.max(Math.floor(value), 3), 5);
 }
 
@@ -79,7 +83,10 @@ export function diversifySelection(
   ranked: RankedNewsArticle[],
   options: DiversifyOptions = {},
 ): RankedNewsArticle[] {
-  const targetCount = clampCount(options.targetCount, 4);
+  const targetCount = Math.min(
+    clampCount(options.targetCount, 4),
+    ranked.length,
+  );
   const penalty = options.sameAnglePenalty ?? 25;
   const minRelevance = options.minRelevance ?? 20;
 

@@ -1,5 +1,9 @@
 import type { NewsArticle } from "@/types";
-import type { NewsProvider, NewsSearchInput } from "@/types/backend";
+import type {
+  DataMode,
+  NewsProvider,
+  NewsSearchInput,
+} from "@/types/backend";
 import { DemoNewsProvider } from "@/lib/news/providers/demo-provider";
 
 /**
@@ -12,18 +16,22 @@ export interface CompositeNewsProviderOptions {
   providers?: NewsProvider[];
   fallback?: NewsProvider;
   maxConcurrent?: number;
+  allowFallback?: boolean;
 }
 
 export class CompositeNewsProvider implements NewsProvider {
   readonly name = "composite";
+  lastDataMode: DataMode = "demo";
   private readonly providers: NewsProvider[];
   private readonly fallback: NewsProvider;
   private readonly maxConcurrent: number;
+  private readonly allowFallback: boolean;
 
   constructor(options: CompositeNewsProviderOptions = {}) {
     this.providers = options.providers ?? [];
     this.fallback = options.fallback ?? new DemoNewsProvider();
     this.maxConcurrent = Math.min(options.maxConcurrent ?? 5, 5);
+    this.allowFallback = options.allowFallback ?? true;
   }
 
   async search(
@@ -31,43 +39,76 @@ export class CompositeNewsProvider implements NewsProvider {
     signal?: AbortSignal,
   ): Promise<NewsArticle[]> {
     if (this.providers.length === 0) {
-      return this.fallback.search(input, signal);
+      if (this.allowFallback) {
+        this.lastDataMode = "demo";
+        return this.fallback.search(input, signal);
+      }
+      this.lastDataMode = "degraded";
+      return [];
     }
 
     const results = await this.runProviders(input, signal);
     const merged = mergeArticles(results.map((r) => r.articles));
 
     if (merged.length === 0) {
-      // 所有源返回空或失败，回退演示数据。
-      return this.fallback.search(input, signal);
+      if (this.allowFallback) {
+        this.lastDataMode = "demo";
+        return this.fallback.search(input, signal);
+      }
+      this.lastDataMode = "degraded";
+      return [];
     }
+    this.lastDataMode = resolveDataMode(results);
     return merged;
   }
 
   private async runProviders(
     input: NewsSearchInput,
     signal?: AbortSignal,
-  ): Promise<Array<{ articles: NewsArticle[] }>> {
+  ): Promise<Array<{ provider: NewsProvider; articles: NewsArticle[] }>> {
     // 分批并发，限制最大并发数。
     const batches: NewsProvider[][] = [];
     for (let i = 0; i < this.providers.length; i += this.maxConcurrent) {
       batches.push(this.providers.slice(i, i + this.maxConcurrent));
     }
 
-    const output: Array<{ articles: NewsArticle[] }> = [];
+    const output: Array<{ provider: NewsProvider; articles: NewsArticle[] }> = [];
     for (const batch of batches) {
       const settled = await Promise.allSettled(
         batch.map((provider) => provider.search(input, signal)),
       );
-      for (const result of settled) {
+      for (const [index, result] of settled.entries()) {
         if (result.status === "fulfilled") {
-          output.push({ articles: result.value });
+          output.push({
+            provider: batch[index],
+            articles: result.value,
+          });
         }
         // rejected 的单个源被忽略，不影响其他源。
       }
     }
     return output;
   }
+}
+
+function resolveDataMode(
+  results: ReadonlyArray<{ provider: NewsProvider; articles: NewsArticle[] }>,
+): DataMode {
+  const modes = results
+    .filter((result) => result.articles.length > 0)
+    .map((result) => {
+      if (result.provider.dataMode) {
+        return result.provider.dataMode;
+      }
+      return result.provider.name === "demo" ? "demo" : "live";
+    });
+  if (modes.includes("live")) {
+    return "live";
+  }
+  if (modes.includes("cache")) {
+    return "cache";
+  }
+  return "demo";
 }
 
 /** 按 id 与规范化 URL 粗粒去重合并。 */

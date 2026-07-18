@@ -11,7 +11,7 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-3 max-w-md text-sm leading-6 text-muted-ink">
-            AI 为你整理世界。当前内容为演示数据，不代表实时新闻。
+            AI 为你整理世界。新闻版权归来源机构与原作者所有，请以原文为准。
           </p>
         </div>
         <nav

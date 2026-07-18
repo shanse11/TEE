@@ -13,7 +13,7 @@ export default function ErrorPage({
     <PageContainer className="py-12">
       <ErrorState
         title="页面暂时无法显示"
-        description="本地演示发生了意外错误，请重新尝试。"
+        description="应用发生了意外错误，请重新尝试。"
         onRetry={reset}
       />
     </PageContainer>

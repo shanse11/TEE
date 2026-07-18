@@ -112,7 +112,7 @@ export function TopicPosterPageClient({
     return (
       <ErrorState
         title="没有找到这张专题海报"
-        description="作品可能尚未生成，或当前浏览器中的演示数据已经重置。"
+        description="作品可能尚未生成、已被删除，或不属于当前账户。"
       />
     );
   }

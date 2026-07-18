@@ -71,6 +71,11 @@ export function TopicSearchWorkspace() {
   const [searchedKeyword, setSearchedKeyword] =
     useState("人工智能教育");
   const [articles, setArticles] = useState<SearchNewsItem[]>([]);
+  const [dataMode, setDataMode] = useState<
+    "live" | "cache" | "degraded" | "demo"
+  >("cache");
+  const [freshness, setFreshness] = useState<string | null>(null);
+  const [sources, setSources] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(true);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -104,10 +109,14 @@ export function TopicSearchWorkspace() {
         const result = await apiClient.searchNews({
           keyword: trimmedKeyword,
           timeRange: nextTimeRange,
+          limit: 30,
         });
         setArticles(result.items);
         setSelectedIds(chooseDefaultArticles(result.items));
         setSearchedKeyword(result.query);
+        setDataMode(result.dataMode ?? "cache");
+        setFreshness(result.freshness ?? null);
+        setSources(result.sources ?? []);
       } catch (error) {
         setSearchError(toApiError(error).message);
       } finally {
@@ -124,6 +133,7 @@ export function TopicSearchWorkspace() {
       .searchNews({
         keyword: "人工智能教育",
         timeRange: "7d",
+        limit: 30,
       })
       .then((result) => {
         if (!active) {
@@ -133,6 +143,9 @@ export function TopicSearchWorkspace() {
         setArticles(result.items);
         setSelectedIds(chooseDefaultArticles(result.items));
         setSearchedKeyword(result.query);
+        setDataMode(result.dataMode ?? "cache");
+        setFreshness(result.freshness ?? null);
+        setSources(result.sources ?? []);
         setIsSearching(false);
       })
       .catch((error: unknown) => {
@@ -289,7 +302,7 @@ export function TopicSearchWorkspace() {
       {isSearching && articles.length === 0 ? (
         <LoadingState
           title="正在搜索候选新闻"
-          description="正在按相关度和报道角度整理演示资讯。"
+          description="正在从最新新闻池按相关度和报道角度整理候选资讯。"
         />
       ) : searchError ? (
         <ErrorState
@@ -309,8 +322,35 @@ export function TopicSearchWorkspace() {
                   候选新闻
                 </h2>
                 <p className="mt-1 text-sm text-muted-ink">
-                  “{searchedKeyword}”共找到 {articles.length} 条演示结果
+                  “{searchedKeyword}”共找到 {articles.length} 条结果
+                  {" · "}
+                  {dataMode === "live"
+                    ? "实时更新"
+                    : dataMode === "cache"
+                      ? "新闻缓存"
+                      : dataMode === "degraded"
+                        ? "服务降级"
+                        : "演示数据"}
+                  {freshness
+                    ? ` · 更新于 ${new Date(freshness).toLocaleTimeString(
+                        "zh-CN",
+                        { hour: "2-digit", minute: "2-digit" },
+                      )}`
+                    : ""}
+                  {sources.length > 0
+                    ? ` · ${sources.length} 个来源：${sources
+                        .slice(0, 5)
+                        .join("、")}`
+                    : ""}
                 </p>
+                {sources.length > 0 &&
+                  sources.length < 5 &&
+                  dataMode !== "demo" && (
+                    <p className="mt-1 text-xs text-amber-700">
+                      当前仅覆盖 {sources.length} 个平台；系统已继续请求在线来源，
+                      未授权的平台不会伪装成实时结果。
+                    </p>
+                  )}
               </div>
               <p className="text-xs leading-5 text-muted-ink">
                 请选择 {MIN_TOPIC_ARTICLES}～{MAX_TOPIC_ARTICLES} 篇不同角度的新闻

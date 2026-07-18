@@ -42,6 +42,7 @@ const externalResponseSchema = z.object({
 export interface GenericNewsApiProviderOptions {
   apiKey?: string;
   baseUrl?: string;
+  domains?: string[];
   timeoutMs?: number;
   fetcher?: typeof fetch;
 }
@@ -52,17 +53,35 @@ function isRetryableStatus(status: number): boolean {
 
 export class GenericNewsApiProvider implements NewsProvider {
   readonly name = "newsapi";
+  readonly dataMode = "live" as const;
   private readonly apiKey: string;
   private readonly baseUrl: string;
+  private readonly domains: string[];
   private readonly timeoutMs: number;
   private readonly fetcher: typeof fetch;
 
   constructor(options: GenericNewsApiProviderOptions = {}) {
     this.apiKey = options.apiKey ?? serverEnv.NEWS_API_KEY ?? "";
-    this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
+    this.baseUrl =
+      options.baseUrl ?? serverEnv.NEWS_API_BASE_URL ?? DEFAULT_BASE_URL;
+    this.domains =
+      options.domains ??
+      (serverEnv.NEWS_API_DOMAINS ?? "")
+        .split(",")
+        .map((domain) => domain.trim().toLocaleLowerCase("en-US"))
+        .filter(
+          (domain) =>
+            domain.length > 0 &&
+            /^[a-z0-9.-]+$/.test(domain) &&
+            !domain.startsWith(".") &&
+            !domain.endsWith("."),
+        )
+        .slice(0, 20);
     this.timeoutMs = Math.min(
-      options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-      DEFAULT_TIMEOUT_MS,
+      options.timeoutMs ??
+        serverEnv.NEWS_PROVIDER_TIMEOUT_MS ??
+        DEFAULT_TIMEOUT_MS,
+      15_000,
     );
     this.fetcher = options.fetcher ?? fetch;
   }
@@ -88,8 +107,13 @@ export class GenericNewsApiProvider implements NewsProvider {
         return await this.fetchOnce(input, signal);
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        // 4xx 参数错误不重试。
-        if (error instanceof ProviderHttpError && error.status >= 400 && error.status < 500 && error.status !== 429) {
+        if (
+          error instanceof ProviderHttpError &&
+          !isRetryableStatus(error.status)
+        ) {
+          break;
+        }
+        if (error instanceof z.ZodError || error instanceof SyntaxError) {
           break;
         }
       }
@@ -114,6 +138,9 @@ export class GenericNewsApiProvider implements NewsProvider {
       if (input.from) url.searchParams.set("from", input.from.slice(0, 10));
       if (input.to) url.searchParams.set("to", input.to.slice(0, 10));
       if (input.limit) url.searchParams.set("pageSize", String(input.limit));
+      if (this.domains.length > 0) {
+        url.searchParams.set("domains", this.domains.join(","));
+      }
 
       const response = await this.fetcher(url.toString(), {
         method: "GET",
@@ -137,7 +164,9 @@ export class GenericNewsApiProvider implements NewsProvider {
           source: article.source?.name,
           sourceUrl: article.url,
           publishedAt: article.publishedAt,
+          category: input.query,
           imageUrl: article.urlToImage,
+          keywords: [input.query],
         })) satisfies RawArticle[],
       );
     } finally {

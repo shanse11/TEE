@@ -13,3 +13,16 @@ dist/
 *.log
 *.tsbuildinfo
 coverage/
+
+# Local tool and test caches
+.codex/
+.cache/
+.turbo/
+.vitest/
+.playwright/
+playwright-report/
+test-results/
+*.lcov
+
+# Local TodayPaper development state
+.todaypaper/

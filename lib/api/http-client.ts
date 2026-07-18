@@ -55,6 +55,7 @@ export function createHttpClient(
   ): Promise<T> {
     const response = await fetcher(resolveUrl(path, options.baseUrl), {
       ...init,
+      cache: init?.cache ?? (init?.method ? undefined : "no-store"),
       credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
@@ -65,7 +66,13 @@ export function createHttpClient(
     const payload: unknown = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const parsedError = apiErrorSchema.safeParse(payload);
+      const errorPayload =
+        payload &&
+        typeof payload === "object" &&
+        "error" in payload
+          ? (payload as { error: unknown }).error
+          : payload;
+      const parsedError = apiErrorSchema.safeParse(errorPayload);
 
       throw new TodayPaperApiError(
         parsedError.success
@@ -78,7 +85,13 @@ export function createHttpClient(
       );
     }
 
-    return schema.parse(payload);
+    const dataPayload =
+      payload &&
+      typeof payload === "object" &&
+      "data" in payload
+        ? (payload as { data: unknown }).data
+        : payload;
+    return schema.parse(dataPayload);
   }
 
   return {
@@ -88,6 +101,9 @@ export function createHttpClient(
         keyword: input.keyword,
         timeRange: input.timeRange,
       });
+      if (input.limit !== undefined) {
+        searchParams.set("limit", String(input.limit));
+      }
 
       return request(
         `/api/news/search?${searchParams.toString()}`,

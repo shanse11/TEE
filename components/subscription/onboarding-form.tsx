@@ -75,7 +75,7 @@ const topicOptions: TopicOption[] = [
 const defaultValues: SubscriptionFormValues = {
   topics: ["人工智能", "科技数码", "商业财经"],
   customKeywords: "",
-  email: "reader@example.com",
+  email: "",
   dailyDelivery: true,
 };
 

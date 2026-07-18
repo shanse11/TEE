@@ -34,11 +34,8 @@ import {
 import { Toast } from "@/components/ui/toast";
 import { GenerationSteps } from "@/components/workflow/generation-steps";
 import { apiClient, toApiError } from "@/lib/api/client";
-import {
-  MOCK_DELIVERY_TIME,
-  MOCK_ISSUE_DATE,
-  MOCK_USER_ID,
-} from "@/lib/mock/constants";
+import { MOCK_DELIVERY_TIME } from "@/lib/mock/constants";
+import { shanghaiDate } from "@/lib/time/shanghai";
 import {
   runGenerationWorkflow,
   type GenerationProgress,
@@ -144,25 +141,20 @@ export function DashboardClient({
     };
   }, [demoData]);
 
+  const currentDate = demoMode
+    ? (demoData?.issues[0]?.issueDate ?? shanghaiDate())
+    : shanghaiDate();
   const todayIssue = useMemo(
-    () =>
-      issues.find(
-        (issue) =>
-          (demoMode || issue.userId === MOCK_USER_ID) &&
-          issue.issueDate === MOCK_ISSUE_DATE,
-      ),
-    [demoMode, issues],
+    () => issues.find((issue) => issue.issueDate === currentDate),
+    [currentDate, issues],
   );
-  const historicalIssues = useMemo(
-    () => issues.filter((issue) => issue.id !== todayIssue?.id),
-    [issues, todayIssue?.id],
-  );
+  const archivedIssues = useMemo(() => issues, [issues]);
   const enabledTopics =
     subscriptions?.subscriptions
       .filter((subscription) => subscription.enabled)
       .map((subscription) => subscription.topic) ?? [];
 
-  async function simulateDelivery() {
+  async function generateTodayIssue() {
     if (demoMode) {
       setToast({
         message: "当前为固定演示模式，页面不会写入浏览器数据。",
@@ -171,10 +163,10 @@ export function DashboardClient({
       return;
     }
 
-    if (todayIssue) {
+    if (enabledTopics.length === 0) {
       setToast({
-        message: "今日份日报已生成，可直接查看完整内容。",
-        variant: "info",
+        message: "请先在“管理订阅”中启用至少一个关注方向。",
+        variant: "error",
       });
       return;
     }
@@ -191,19 +183,25 @@ export function DashboardClient({
         signal: controller.signal,
         onProgress: setProgress,
         operation: () =>
-          apiClient.simulateDailyDelivery({
-            userId: MOCK_USER_ID,
-            issueDate: MOCK_ISSUE_DATE,
+          apiClient.generateDailyIssue({
+            topics: enabledTopics,
+            issueDate: currentDate,
+            forceRefresh: todayIssue ? true : undefined,
           }),
       });
 
       setIssues((currentIssues) => [
-        result.issue,
-        ...currentIssues.filter((issue) => issue.id !== result.issue.id),
+        result,
+        ...currentIssues.filter(
+          (issue) =>
+            issue.issueDate !== result.issueDate && issue.id !== result.id,
+        ),
       ]);
       setToast({
-        message: result.message,
-        variant: result.status === "partial" ? "info" : "success",
+        message: todayIssue
+          ? "已根据当前订阅重新生成今日日报。"
+          : "已根据当前订阅生成今日日报。",
+        variant: "success",
       });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
@@ -254,13 +252,13 @@ export function DashboardClient({
           </div>
           <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
             {todayIssue
-              ? "早上好，今日报纸已送达"
+              ? "早上好，今日报纸已生成"
               : "早上好，准备生成今日报纸"}
           </h1>
           <p className="mt-4 text-sm leading-7 text-muted-ink">
             {todayIssue
-              ? "你的专属日报已经完成，祝你有美好的一天。"
-              : "订阅设置已就绪，点击模拟投递即可生成今天的演示日报。"}
+              ? "你的专属日报已经完成；订阅方向有变化时可立即重新生成。"
+              : "订阅设置已就绪，可立即生成今天的日报；自动投递将在每天 08:00 执行。"}
           </p>
         </div>
         <Card className="min-w-64">
@@ -280,7 +278,7 @@ export function DashboardClient({
             </span>
             <div>
               <p className="text-sm font-semibold">
-                {todayIssue ? "已送达" : "等待投递"}
+                {todayIssue ? "已生成" : "等待生成"}
               </p>
               <p className="mt-1 text-xs text-muted-ink">
                 今天 {MOCK_DELIVERY_TIME}
@@ -316,7 +314,7 @@ export function DashboardClient({
             type="button"
             variant="secondary"
             className="mt-4"
-            onClick={() => void simulateDelivery()}
+            onClick={() => void generateTodayIssue()}
           >
             <RotateCcw />
             重试生成
@@ -328,6 +326,7 @@ export function DashboardClient({
         <DailyIssueCard
           issue={todayIssue}
           href={demoMode ? "/demo/newspaper" : undefined}
+          demoMode={demoMode}
         />
 
         <aside className="space-y-5">
@@ -360,7 +359,7 @@ export function DashboardClient({
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">我的订阅</CardTitle>
-              <CardDescription>当前启用的演示关注方向</CardDescription>
+              <CardDescription>当前启用的关注方向</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
               {enabledTopics.map((topic) => (
@@ -387,14 +386,16 @@ export function DashboardClient({
                 type="button"
                 className="w-full"
                 disabled={isGenerating}
-                onClick={() => void simulateDelivery()}
+                onClick={() => void generateTodayIssue()}
               >
                 <Clock3 />
                 {isGenerating
                   ? "正在生成…"
                   : demoMode
                     ? "查看固定投递说明"
-                    : "模拟每日 8 点投递"}
+                    : todayIssue
+                      ? "按当前订阅重新生成"
+                      : "立即生成今日日报"}
               </Button>
               <Button asChild variant="secondary" className="w-full">
                 <Link href="/subscriptions">
@@ -413,7 +414,7 @@ export function DashboardClient({
             <p className="text-xs font-semibold tracking-[0.2em] text-brand uppercase">
               Archive
             </p>
-            <h2 className="mt-2 font-serif text-3xl font-semibold">历史日报</h2>
+            <h2 className="mt-2 font-serif text-3xl font-semibold">已生成日报</h2>
           </div>
           <Link
             href="/creations"
@@ -422,9 +423,9 @@ export function DashboardClient({
             查看全部
           </Link>
         </div>
-        {historicalIssues.length > 0 ? (
+        {archivedIssues.length > 0 ? (
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {historicalIssues.slice(0, 3).map((issue) => (
+            {archivedIssues.slice(0, 3).map((issue) => (
               <Link
                 key={issue.id}
                 href={
@@ -436,9 +437,12 @@ export function DashboardClient({
                   className="size-5 text-brand"
                   aria-hidden="true"
                 />
-                <p className="mt-5 font-serif text-lg font-semibold">
-                  {issue.issueDate} 日报
-                </p>
+                <div className="mt-5 flex items-center gap-2">
+                  <p className="font-serif text-lg font-semibold">
+                    {issue.issueDate} 日报
+                  </p>
+                  {issue.id === todayIssue?.id && <Badge>今日</Badge>}
+                </div>
                 <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-ink">
                   {issue.dailyBriefing}
                 </p>
@@ -447,7 +451,7 @@ export function DashboardClient({
           </div>
         ) : (
           <p className="mt-5 rounded-md border border-dashed border-line-strong p-5 text-sm text-muted-ink">
-            暂无历史日报，完成首次模拟投递后会保存在这里。
+            暂无已生成日报，完成首次生成后会保存在这里。
           </p>
         )}
       </section>

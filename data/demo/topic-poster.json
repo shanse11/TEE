@@ -10,6 +10,7 @@
       "summary": "示例研究团队围绕质量、透明度与责任边界提出讨论框架。",
       "angle": "政策",
       "source": "TodayPaper 演示资料库",
+      "sourceUrl": "https://example.com/todaypaper-demo/policy-01",
       "publishedAt": "2026-07-18T01:30:00.000Z",
       "imageUrl": "/images/demo/education.svg",
       "relevanceScore": 96
@@ -20,6 +21,7 @@
       "summary": "原型样例强调教师可控、过程可解释与学习材料的结构化整理。",
       "angle": "技术",
       "source": "TodayPaper 演示资料库",
+      "sourceUrl": "https://example.com/todaypaper-demo/tech-01",
       "publishedAt": "2026-07-17T06:22:00.000Z",
       "imageUrl": "/images/demo/ai-lab.svg",
       "relevanceScore": 93
@@ -30,6 +32,7 @@
       "summary": "行业样例更关注可评估结果、数据治理和长期服务能力。",
       "angle": "产业",
       "source": "TodayPaper 演示资料库",
+      "sourceUrl": "https://example.com/todaypaper-demo/industry-01",
       "publishedAt": "2026-07-16T03:05:00.000Z",
       "imageUrl": "/images/demo/market.svg",
       "relevanceScore": 91
@@ -40,6 +43,7 @@
       "summary": "试点样例重点关注教师复核、学生隐私和反馈时效。",
       "angle": "应用",
       "source": "TodayPaper 演示资料库",
+      "sourceUrl": "https://example.com/todaypaper-demo/application-01",
       "publishedAt": "2026-07-15T08:40:00.000Z",
       "imageUrl": "/images/demo/campus.svg",
       "relevanceScore": 89

@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { MobileNav } from "./mobile-nav";
 import { DesktopNavigation } from "./navigation";
 import { PageContainer } from "./page-container";
+import { getOptionalCurrentUser } from "@/lib/auth/current-user";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const user = await getOptionalCurrentUser();
   return (
     <header
       className="sticky top-0 z-50 border-b border-line bg-surface/95 backdrop-blur-sm"
@@ -18,12 +20,30 @@ export function SiteHeader() {
         <Logo />
         <DesktopNavigation />
         <div className="ml-auto hidden lg:block">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard">
-              <UserRound />
-              进入主页
-            </Link>
-          </Button>
+          {user ? (
+            <div className="flex items-center gap-1">
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/dashboard">
+                  <UserRound />
+                  {user.email ?? "进入主页"}
+                </Link>
+              </Button>
+              {user.mode === "supabase" ? (
+                <form action="/auth/signout" method="post">
+                  <Button type="submit" variant="ghost" size="sm">
+                    退出
+                  </Button>
+                </form>
+              ) : null}
+            </div>
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/login">
+                <UserRound />
+                登录
+              </Link>
+            </Button>
+          )}
         </div>
         <MobileNav />
       </PageContainer>

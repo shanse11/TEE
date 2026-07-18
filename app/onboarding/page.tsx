@@ -5,7 +5,7 @@ import { OnboardingForm } from "@/components/subscription/onboarding-form";
 
 export const metadata: Metadata = {
   title: "设置每日订阅",
-  description: "选择关注方向，设置每天 08:00 的演示日报。",
+  description: "选择关注方向，设置每天 08:00 的个性化日报。",
 };
 
 const steps = [
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
           aria-hidden="true"
         />
         <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted-ink">
-          选择你关心的方向，AI 将使用固定演示内容为你编排每日简报。
+          选择你关心的方向，AI 将从最新新闻中为你编排每日简报。
         </p>
       </div>
 

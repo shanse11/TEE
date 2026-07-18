@@ -98,7 +98,7 @@ export function NewspaperPageClient({ issueId }: { issueId: string }) {
     return (
       <ErrorState
         title="没有找到这份日报"
-        description="这份日报可能尚未生成，或当前浏览器中的演示数据已经重置。"
+        description="这份日报可能尚未生成、已被删除，或不属于当前账户。"
       />
     );
   }

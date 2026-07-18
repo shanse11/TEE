@@ -2,7 +2,7 @@ import type { TodayPaperApiClient } from "@/lib/api/contracts";
 import { createHttpClient } from "@/lib/api/http-client";
 import { createMockClient } from "@/lib/api/mock-client";
 
-const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
+const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
 export const apiClient: TodayPaperApiClient = useMockApi
   ? createMockClient()

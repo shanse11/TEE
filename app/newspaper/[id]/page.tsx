@@ -5,7 +5,7 @@ import { NewspaperPageClient } from "@/components/newspaper/newspaper-page-clien
 
 export const metadata: Metadata = {
   title: "日报详情",
-  description: "阅读 TodayPaper 经典中文报纸版式的演示日报。",
+  description: "阅读 TodayPaper 经典中文报纸版式的个性化日报。",
 };
 
 export default async function NewspaperPage({

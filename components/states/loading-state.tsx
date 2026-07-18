@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function LoadingState({
   title = "正在加载",
-  description = "正在整理演示数据，请稍候。",
+  description = "正在整理最新数据，请稍候。",
   className,
 }: {
   title?: string;

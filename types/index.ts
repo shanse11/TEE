@@ -26,7 +26,13 @@ export interface DailyIssue {
   dailyBriefing: string;
   sections: {
     title: string;
+    summary?: string;
     articles: NewsArticle[];
+  }[];
+  articleHighlights?: {
+    articleId: string;
+    headline?: string;
+    takeaway: string;
   }[];
   quickNews: string[];
   watchNext: string[];
@@ -139,6 +145,7 @@ export interface SearchNewsItem extends NewsArticle {
 export interface SearchNewsParams {
   keyword: string;
   timeRange?: NewsTimeRange;
+  limit?: number;
 }
 
 export interface SearchNewsResponse {
@@ -146,12 +153,18 @@ export interface SearchNewsResponse {
   timeRange: NewsTimeRange;
   items: SearchNewsItem[];
   total: number;
+  sources?: string[];
+  sourceCount?: number;
+  dataMode?: "live" | "cache" | "degraded" | "demo";
+  freshness?: string;
 }
 
 export interface GenerateDailyIssueInput {
-  userId: string;
+  /** 仅旧版 Mock Client 使用；真实 API 从服务端 Session 解析用户。 */
+  userId?: string;
   topics: string[];
   issueDate?: string;
+  forceRefresh?: boolean;
 }
 
 export interface GenerateThemePosterInput {
@@ -198,7 +211,8 @@ export interface CreationListResponse {
 }
 
 export interface SimulateDailyDeliveryInput {
-  userId: string;
+  /** 仅旧版 Mock Client 使用；真实 API 从服务端 Session 解析用户。 */
+  userId?: string;
   issueDate?: string;
 }
 

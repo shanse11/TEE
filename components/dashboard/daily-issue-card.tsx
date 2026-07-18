@@ -15,9 +15,11 @@ function findLeadArticle(issue: DailyIssue): NewsArticle | undefined {
 export function DailyIssueCard({
   issue,
   href,
+  demoMode = false,
 }: {
   issue?: DailyIssue;
   href?: string;
+  demoMode?: boolean;
 }) {
   if (!issue) {
     return (
@@ -30,7 +32,7 @@ export function DailyIssueCard({
             今日份日报还未生成
           </h2>
           <p className="mt-3 text-sm leading-7 text-muted-ink">
-            点击“模拟每日 8 点投递”，体验获取、筛选、摘要和排版的完整演示流程。
+            点击“立即生成今日日报”，系统会完成获取、筛选、摘要和排版。
           </p>
         </div>
       </article>
@@ -51,7 +53,10 @@ export function DailyIssueCard({
       </header>
       <div className="flex flex-wrap justify-between gap-2 border-b border-line py-2 text-xs text-muted-ink">
         <span>{issue.issueDate}</span>
-        <span>演示期 · {issue.topics.join(" / ")}</span>
+        <span>
+          {demoMode ? "演示期 · " : ""}
+          {issue.topics.join(" / ")}
+        </span>
       </div>
       {leadArticle && (
         <div className="mt-5 grid gap-5 sm:grid-cols-[1.05fr_0.95fr]">

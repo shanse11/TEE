@@ -15,6 +15,15 @@ function normalizeForMatch(text: string): string {
 function tokenizeQuery(query: string): string[] {
   const normalized = normalizeForMatch(query);
   const tokens = normalized.split(/\s+/).filter((token) => token.length > 0);
+  if (
+    tokens.length === 1 &&
+    normalized.length > 2 &&
+    /[\p{Script=Han}]/u.test(normalized)
+  ) {
+    for (let index = 0; index < normalized.length - 1; index += 1) {
+      tokens.push(normalized.slice(index, index + 2));
+    }
+  }
   // 加入完整查询作为整体 token，支持"完整出现在标题中"。
   if (normalized.length > 0 && !tokens.includes(normalized)) {
     tokens.unshift(normalized);
@@ -36,6 +45,11 @@ export function scoreRelevance(query: string, article: NewsArticle): number {
   const description = normalizeForMatch(article.description);
   const keywords = normalizeForMatch(article.keywords.join(" "));
   const category = normalizeForMatch(article.category);
+  const normalizedQuery = normalizeForMatch(query).trim();
+
+  if (normalizedQuery.length > 0 && title.includes(normalizedQuery)) {
+    return 100;
+  }
 
   let score = 0;
   let maxScore = 0;
@@ -44,7 +58,7 @@ export function scoreRelevance(query: string, article: NewsArticle): number {
     // 标题权重 1.0；完整出现在标题中额外加成。
     maxScore += 1.0;
     if (title.includes(token)) {
-      score += token === normalizeForMatch(query) && title.includes(token)
+      score += token === normalizedQuery && title.includes(token)
         ? 1.0
         : 0.7;
     } else if (description.includes(token)) {
@@ -97,7 +111,7 @@ export function scoreRecency(publishedAt: string, now: number): number {
 export function scoreCompleteness(article: NewsArticle): number {
   let score = 0;
 
-  if (article.description.trim().length >= 10) {
+  if (article.description.trim().length >= 4) {
     score += 25;
   } else if (article.description.trim().length > 0) {
     score += 10;

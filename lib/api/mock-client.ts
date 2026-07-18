@@ -151,8 +151,11 @@ export function createMockClient(
       const input = searchNewsParamsSchema.parse(params);
 
       return respond("searchNews", () => {
-        const items = demoArticles.filter((article) =>
-          includesKeyword(article, input.keyword),
+        const items = demoArticles
+          .filter((article) => includesKeyword(article, input.keyword))
+          .slice(0, input.limit ?? demoArticles.length);
+        const sources = Array.from(
+          new Set(items.map((article) => article.source)),
         );
 
         return searchNewsResponseSchema.parse({
@@ -160,6 +163,10 @@ export function createMockClient(
           timeRange: input.timeRange,
           items,
           total: items.length,
+          sources,
+          sourceCount: sources.length,
+          dataMode: "demo",
+          freshness: new Date().toISOString(),
         });
       });
     },
@@ -168,15 +175,16 @@ export function createMockClient(
       const parsedInput = generateDailyIssueInputSchema.parse(input);
 
       return respond("generateDailyIssue", () => {
+        const userId = parsedInput.userId ?? MOCK_USER_ID;
         const issueDate = parsedInput.issueDate ?? demoDailyIssue.issueDate;
         const state = readMockStore();
         const existingIssue = state.dailyIssues.find(
           (issue) =>
-            issue.userId === parsedInput.userId &&
+            issue.userId === userId &&
             issue.issueDate === issueDate,
         );
 
-        if (existingIssue) {
+        if (existingIssue && !parsedInput.forceRefresh) {
           if (
             !state.creations.some(
               (creation) =>
@@ -205,8 +213,8 @@ export function createMockClient(
 
         const issue = dailyIssueSchema.parse({
           ...demoDailyIssue,
-          id: createId("daily"),
-          userId: parsedInput.userId,
+          id: existingIssue?.id ?? createId("daily"),
+          userId,
           issueDate,
           topics: parsedInput.topics,
           createdAt: new Date().toISOString(),
@@ -224,8 +232,19 @@ export function createMockClient(
 
         updateMockStore((currentState) => ({
           ...currentState,
-          dailyIssues: [issue, ...currentState.dailyIssues],
-          creations: [creation, ...currentState.creations],
+          dailyIssues: [
+            issue,
+            ...currentState.dailyIssues.filter(
+              (item) =>
+                item.userId !== userId || item.issueDate !== issueDate,
+            ),
+          ],
+          creations: [
+            creation,
+            ...currentState.creations.filter(
+              (item) => item.id !== creation.id,
+            ),
+          ],
         }));
 
         return issue;
@@ -505,11 +524,12 @@ export function createMockClient(
       }).parse(input);
 
       return respond("simulateDailyDelivery", () => {
+        const userId = parsedInput.userId ?? MOCK_USER_ID;
         const issueDate = parsedInput.issueDate ?? demoDailyIssue.issueDate;
         const state = readMockStore();
         const existingIssue = state.dailyIssues.find(
           (issue) =>
-            issue.userId === parsedInput.userId &&
+            issue.userId === userId &&
             issue.issueDate === issueDate,
         );
 
@@ -518,7 +538,7 @@ export function createMockClient(
           dailyIssueSchema.parse({
             ...demoDailyIssue,
             id: createId("daily"),
-            userId: parsedInput.userId,
+            userId,
             issueDate,
             createdAt: new Date().toISOString(),
           });

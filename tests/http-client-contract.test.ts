@@ -67,6 +67,7 @@ describe("HttpClient 接口契约", () => {
     await client.searchNews({
       keyword: " 人工智能教育 ",
       timeRange: "7d",
+      limit: 30,
     });
     await client.getCreations({
       type: "topic_poster",
@@ -78,7 +79,7 @@ describe("HttpClient 接口契约", () => {
     });
 
     expect(requestAt(fetcher, 0)).toEqual({
-      url: `${baseUrl}/api/news/search?keyword=${encodeURIComponent("人工智能教育")}&timeRange=7d`,
+      url: `${baseUrl}/api/news/search?keyword=${encodeURIComponent("人工智能教育")}&timeRange=7d&limit=30`,
       method: "GET",
       body: undefined,
     });
@@ -111,6 +112,7 @@ describe("HttpClient 接口契约", () => {
       userId: "demo-user",
       topics: ["人工智能"],
       issueDate: "2026-07-18",
+      forceRefresh: true,
     });
     await client.generateThemePoster({
       theme: "人工智能",
@@ -153,6 +155,7 @@ describe("HttpClient 接口契约", () => {
           userId: "demo-user",
           topics: ["人工智能"],
           issueDate: "2026-07-18",
+          forceRefresh: true,
         },
       },
       {

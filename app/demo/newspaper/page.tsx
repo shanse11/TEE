@@ -35,7 +35,7 @@ export default function DemoNewspaperPage() {
         </div>
         <NewspaperActions title={`${demoIssue.issueDate} 固定演示日报`} />
       </div>
-      <DailyNewspaper issue={demoIssue} />
+      <DailyNewspaper issue={demoIssue} demoMode />
     </PageContainer>
   );
 }

@@ -4,7 +4,7 @@
 
 export const INPUT_LIMITS = {
   /** 搜索关键词最大字符数。 */
-  maxQueryLength: 50,
+  maxQueryLength: 100,
   /** 单篇文章 content 最大字符数。 */
   maxContentLength: 8000,
   /** 单篇文章 description 最大字符数。 */
@@ -14,7 +14,7 @@ export const INPUT_LIMITS = {
   /** 候选新闻数量上限。 */
   maxCandidateArticles: 50,
   /** 进入 LLM 的文章数量上限。 */
-  maxLlmArticles: 5,
+  maxLlmArticles: 8,
   /** 并发新闻源数量上限。 */
   maxConcurrentProviders: 5,
 } as const;

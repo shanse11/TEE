@@ -49,7 +49,7 @@ export function DeliverySettings({
           </p>
         ) : (
           <p id="delivery-email-help" className="mt-2 text-xs text-muted-ink">
-            当前仅用于本地演示，不会真实发送邮件。
+            启用投递后，日报会发送到该邮箱。
           </p>
         )}
       </div>

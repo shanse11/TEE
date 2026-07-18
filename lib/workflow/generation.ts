@@ -4,7 +4,7 @@ export const generationSteps = [
   {
     id: "fetching",
     title: "搜索相关新闻",
-    description: "读取与主题相关的演示资讯",
+    description: "读取与主题相关的最新资讯",
   },
   {
     id: "ranking",

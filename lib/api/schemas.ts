@@ -44,10 +44,20 @@ export const dailyIssueSchema = z
       .array(
         z.object({
           title: z.string().min(1),
+          summary: z.string().min(1).optional(),
           articles: z.array(newsArticleSchema).min(1),
         }),
       )
       .min(1),
+    articleHighlights: z
+      .array(
+        z.object({
+          articleId: z.string().min(1),
+          headline: z.string().min(1).optional(),
+          takeaway: z.string().min(1),
+        }),
+      )
+      .optional(),
     quickNews: z.array(z.string().min(1)),
     watchNext: z.array(z.string().min(1)),
     createdAt: dateTimeSchema,
@@ -180,6 +190,7 @@ export const searchNewsItemSchema = newsArticleSchema.extend({
 export const searchNewsParamsSchema = z.object({
   keyword: z.string().trim().min(1).max(50),
   timeRange: z.enum(["24h", "7d", "30d"]).default("7d"),
+  limit: z.number().int().min(1).max(50).optional(),
 });
 
 export const searchNewsResponseSchema = z.object({
@@ -187,12 +198,17 @@ export const searchNewsResponseSchema = z.object({
   timeRange: z.enum(["24h", "7d", "30d"]),
   items: z.array(searchNewsItemSchema),
   total: z.number().int().nonnegative(),
+  sources: z.array(z.string().min(1)).optional(),
+  sourceCount: z.number().int().nonnegative().optional(),
+  dataMode: z.enum(["live", "cache", "degraded", "demo"]).optional(),
+  freshness: dateTimeSchema.optional(),
 });
 
 export const generateDailyIssueInputSchema = z.object({
-  userId: z.string().min(1),
+  userId: z.string().min(1).optional(),
   topics: z.array(z.string().trim().min(1)).min(1),
   issueDate: dateSchema.optional(),
+  forceRefresh: z.boolean().optional(),
 });
 
 export const generateThemePosterInputSchema = z.object({
@@ -206,6 +222,78 @@ export const generateTopicPosterInputSchema = z.object({
   keyword: z.string().trim().min(1).max(50),
   articleIds: z.array(z.string().min(1)).min(3).max(5),
   template: z.enum(["classic", "modern"]),
+});
+
+/** Route Handler 专用公开请求 Schema，兼容前端既有字段名。 */
+export const newsSearchQuerySchema = z.object({
+  q: z.string().trim().min(1).max(100),
+  range: z.enum(["24h", "7d", "30d"]).default("7d"),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export const rankNewsRequestSchema = z.object({
+  keyword: z.string().trim().min(1).max(100),
+  articles: z.array(newsArticleSchema).min(1).max(50),
+  limit: z.number().int().min(3).max(20).default(4),
+  diversify: z.boolean().default(true),
+});
+
+export const dailyIssueGenerateRequestSchema = z.object({
+  userId: z.string().min(1).optional(),
+  issueDate: dateSchema.optional(),
+  topics: z.array(z.string().trim().min(1).max(50)).min(1).max(8),
+  forceRefresh: z.boolean().default(false),
+});
+
+export const themePosterGenerateRequestSchema = z.object({
+  userId: z.string().min(1).optional(),
+  theme: z.string().trim().min(1).max(50),
+  articleCount: z.union([z.literal(3), z.literal(4), z.literal(5)]),
+  summaryLength: z.enum(["brief", "standard"]),
+  template: z.enum(["classic", "modern"]),
+});
+
+export const topicPosterGenerateRequestSchema = z
+  .object({
+    userId: z.string().min(1).optional(),
+    keyword: z.string().trim().min(1).max(50),
+    selectedArticleIds: z.array(z.string().min(1)).min(3).max(5).optional(),
+    articleIds: z.array(z.string().min(1)).min(3).max(5).optional(),
+    template: z.enum(["classic", "modern"]),
+  })
+  .transform((value) => ({
+    userId: value.userId,
+    keyword: value.keyword,
+    selectedArticleIds: value.selectedArticleIds ?? value.articleIds ?? [],
+    template: value.template,
+  }))
+  .refine((value) => value.selectedArticleIds.length >= 3, {
+    message: "请选择 3～5 篇文章",
+    path: ["selectedArticleIds"],
+  });
+
+export const createSubscriptionRequestSchema = z.object({
+  topic: z.string().trim().min(1).max(50),
+  keywords: z.array(z.string().trim().min(1).max(50)).max(20).default([]),
+  enabled: z.boolean().default(true),
+});
+
+export const updateSubscriptionRequestSchema = z
+  .object({
+    topic: z.string().trim().min(1).max(50).optional(),
+    keywords: z
+      .array(z.string().trim().min(1).max(50))
+      .max(20)
+      .optional(),
+    enabled: z.boolean().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "至少提供一个待修改字段",
+  });
+
+export const paginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
 export const saveSubscriptionsInputSchema = z.object({
@@ -241,7 +329,7 @@ export const creationListResponseSchema = z.object({
 });
 
 export const simulateDailyDeliveryInputSchema = z.object({
-  userId: z.string().min(1),
+  userId: z.string().min(1).optional(),
   issueDate: dateSchema.optional(),
 });
 

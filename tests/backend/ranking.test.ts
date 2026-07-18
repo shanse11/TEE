@@ -55,6 +55,22 @@ describe("scoreRelevance", () => {
       100,
     );
   });
+
+  it("无空格的中文查询可按相邻词组部分匹配", () => {
+    const matching = article({
+      title: "人工智能赋能课堂",
+      description: "学校正在验证新的教学方式",
+      category: "其他",
+    });
+    const unrelated = article({
+      title: "全球航运市场观察",
+      description: "运价出现阶段性变化",
+      category: "其他",
+    });
+    expect(scoreRelevance("人工智能教育", matching)).toBeGreaterThan(
+      scoreRelevance("人工智能教育", unrelated),
+    );
+  });
 });
 
 describe("scoreRecency（注入时间）", () => {

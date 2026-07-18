@@ -145,21 +145,11 @@ export function ThemePosterGenerator() {
       />
 
       {generationError && (
-        <div className="space-y-3">
-          <ErrorState
-            title="主题海报生成失败"
-            description={generationError}
-            onRetry={() => void generatePoster()}
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            className="w-full"
-            onClick={() => router.push("/theme-poster/demo-theme")}
-          >
-            使用演示数据继续
-          </Button>
-        </div>
+        <ErrorState
+          title="主题海报生成失败"
+          description={generationError}
+          onRetry={() => void generatePoster()}
+        />
       )}
 
       <fieldset disabled={isGenerating}>

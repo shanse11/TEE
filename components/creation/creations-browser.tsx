@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, Search, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CreationCard } from "@/components/creation/creation-card";
 import { ErrorState } from "@/components/states/error-state";
@@ -61,12 +61,18 @@ export function CreationsBrowser() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const filtersRef = useRef(initialFilters);
+
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
 
   useEffect(() => {
     let active = true;
 
-    apiClient
-      .getCreations(toApiFilters(initialFilters))
+    const refresh = () =>
+      apiClient
+      .getCreations(toApiFilters(filtersRef.current))
       .then((result) => {
         if (!active) {
           return;
@@ -74,6 +80,7 @@ export function CreationsBrowser() {
 
         setItems(result.items);
         setTotal(result.total);
+        setError(null);
         setIsLoading(false);
       })
       .catch((loadError: unknown) => {
@@ -85,8 +92,20 @@ export function CreationsBrowser() {
         setIsLoading(false);
       });
 
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refresh();
+      }
+    };
+
+    void refresh();
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
     return () => {
       active = false;
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, []);
 

@@ -139,7 +139,7 @@ export function SubscriptionsManager() {
       ...current,
       {
         id: `local-subscription-${Date.now()}`,
-        userId: "todaypaper-local-user",
+        userId: current[0]?.userId ?? "",
         topic,
         keywords: [],
         enabled: true,
@@ -187,7 +187,7 @@ export function SubscriptionsManager() {
         const now = new Date().toISOString();
         payload.push({
           id: "local-subscription-custom",
-          userId: "todaypaper-local-user",
+          userId: nextSubscriptions[0]?.userId ?? "",
           topic: "自定义关注",
           keywords: normalizedCustomKeywords,
           enabled: true,
@@ -218,7 +218,7 @@ export function SubscriptionsManager() {
           ?.keywords.join("，") ?? "",
       );
       setToast({
-        message: "订阅设置已保存到当前浏览器。",
+        message: "订阅设置已保存到当前账户。",
         variant: "success",
       });
       return true;
@@ -434,7 +434,7 @@ export function SubscriptionsManager() {
               <div>
                 <p className="font-medium">送达时间</p>
                 <p className="mt-1 text-xs text-muted-ink">
-                  MVP 固定时间，不可修改
+                  当前固定为北京时间
                 </p>
               </div>
             </div>
