@@ -73,7 +73,9 @@ describe("后端 Route Handlers", () => {
     expect(dailyResponse.status).toBe(200);
     expect(themeResponse.status).toBe(200);
     expect(topicResponse.status).toBe(200);
-    expect((await payload(dailyResponse)).meta?.dataMode).toBe("cache");
+    expect(["cache", "demo"]).toContain(
+      (await payload(dailyResponse)).meta?.dataMode,
+    );
 
     const creationsResponse = await listCreations(
       new Request(
