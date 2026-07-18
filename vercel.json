@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/news-ingest",
-      "schedule": "*/15 * * * *"
+      "schedule": "30 23 * * *"
     },
     {
       "path": "/api/cron/daily-delivery",

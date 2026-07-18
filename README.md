@@ -65,7 +65,7 @@ USE_MOCK_AI=false
 
 `Vercel Cron 00:00 UTC → 到期用户 → 幂等 claim → 订阅 topic + keywords → 日报生成与保存 → Resend → delivery_logs`
 
-北京时间日期统一通过 `Asia/Shanghai` 计算。真实用户使用 Supabase Magic Link 和 SSR Cookie Session；普通 API 不信任请求体、查询参数或自定义 Header 中的用户 ID。
+Hobby 部署在 UTC 23:30（北京时间 07:30）预抓取新闻；升级到支持高频 Cron 的套餐后可恢复每 15 分钟抓取。北京时间日期统一通过 `Asia/Shanghai` 计算。真实用户使用 Supabase Magic Link 和 SSR Cookie Session；普通 API 不信任请求体、查询参数或自定义 Header 中的用户 ID。
 
 ## 前后端联调
 

@@ -13,12 +13,12 @@
 
 `vercel.json` 定义：
 
-- `/api/cron/news-ingest`：每 15 分钟；
+- `/api/cron/news-ingest`：Hobby 部署为每天 UTC 23:30（北京时间 07:30）预抓取；
 - `/api/cron/daily-delivery`：`0 0 * * *`，即北京时间 08:00。
 
 在 Vercel Secret 中配置高熵 `CRON_SECRET`。Vercel 会发送 `Authorization: Bearer <CRON_SECRET>`。Route 使用固定长度摘要和常量时间比较；缺少或错误 Secret 会返回 401，响应不包含邮箱、正文或凭据。每次日报任务最多处理 20 个用户，后续可把相同 Repository/EmailSender 边界迁移到 Supabase Cron 或队列。
 
-部分 Vercel 套餐限制 Cron 频率；若无法每 15 分钟运行，可至少在 UTC 23:30（北京时间 07:30）预抓取，再保留 UTC 00:00 日报任务。
+当前 Hobby 部署使用 UTC 23:30（北京时间 07:30）预抓取，再保留 UTC 00:00 日报任务。升级到支持更高频 Cron 的套餐后，可将新闻预抓取恢复为 `*/15 * * * *`。
 
 ## 本地验证
 
