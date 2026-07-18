@@ -47,7 +47,7 @@ export function RegisterForm({ configured }: { configured: boolean }) {
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
+        emailRedirectTo: window.location.origin,
       },
     });
     setLoading(false);

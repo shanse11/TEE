@@ -1,7 +1,7 @@
 <h2>Set your TodayPaper password</h2>
 <p>Follow the link below to set a new password for your TodayPaper account.</p>
 <p>
-  <a href="{{ .RedirectTo }}&amp;token_hash={{ .TokenHash }}&amp;type=recovery">
+  <a href="{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/reset-password">
     Set new password
   </a>
 </p>

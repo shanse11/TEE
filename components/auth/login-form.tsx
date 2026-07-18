@@ -80,7 +80,7 @@ export function LoginForm({
     const { error } = await supabase.auth.signInWithOtp({
       email: parsed.data.email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(nextPath)}`,
+        emailRedirectTo: window.location.origin,
       },
     });
     setMagicLoading(false);
