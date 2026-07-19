@@ -1,5 +1,5 @@
 {
-  "installCommand": "npx --yes npm@10.8.2 ci --no-audit --no-fund",
+  "installCommand": "pnpm install --frozen-lockfile",
   "crons": [
     {
       "path": "/api/cron/news-ingest",
