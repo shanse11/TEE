@@ -332,7 +332,7 @@ export class MemoryRepository implements RepositoryBundle {
   ): Promise<DailyIssueRecord> {
     const key = dailyKey(userId, issueDate);
     const existing = this.state.dailyRecords.get(key);
-    if (existing && !forceRefresh) {
+    if (existing && existing.status !== "failed" && !forceRefresh) {
       throw new BackendError({
         code:
           existing.status === "processing"
@@ -342,7 +342,7 @@ export class MemoryRepository implements RepositoryBundle {
           existing.status === "processing"
             ? "今日内容正在生成。"
             : "今日份日报已生成。",
-        retryable: existing.status === "failed",
+        retryable: existing.status === "processing",
       });
     }
 

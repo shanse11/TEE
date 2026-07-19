@@ -272,7 +272,7 @@ export class SupabaseRepository implements RepositoryBundle {
   ): Promise<DailyIssueRecord> {
     const existing = await this.findDailyIssue(userId, issueDate);
     const now = new Date().toISOString();
-    if (existing && !forceRefresh) {
+    if (existing && existing.status !== "failed" && !forceRefresh) {
       throw new BackendError({
         code:
           existing.status === "processing"
@@ -282,7 +282,7 @@ export class SupabaseRepository implements RepositoryBundle {
           existing.status === "processing"
             ? "今日内容正在生成。"
             : "今日份日报已生成。",
-        retryable: existing.status === "failed",
+        retryable: existing.status === "processing",
       });
     }
     if (existing) {

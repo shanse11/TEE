@@ -18,6 +18,22 @@ describe("MemoryRepository", () => {
     ).rejects.toMatchObject({ code: "GENERATION_IN_PROGRESS" });
   });
 
+  it("允许失败的日报任务在同一天重新开始", async () => {
+    const repository = new MemoryRepository(false);
+    await repository.startDailyIssue("demo-user", "2026-07-20");
+    await repository.failDailyIssue(
+      "demo-user",
+      "2026-07-20",
+      "INSUFFICIENT_ARTICLES",
+    );
+
+    await expect(
+      repository.startDailyIssue("demo-user", "2026-07-20"),
+    ).resolves.toMatchObject({
+      status: "processing",
+    });
+  });
+
   it("完成后重复查询返回同一份日报", async () => {
     const repository = new MemoryRepository();
     const existing = await repository.findDailyIssue(

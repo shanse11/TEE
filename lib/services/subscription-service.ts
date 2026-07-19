@@ -14,6 +14,7 @@ import {
 } from "@/lib/api/schemas";
 import { stableHash } from "@/lib/security/stable-id";
 import { serverEnv } from "@/lib/config/env";
+import { shanghaiDate } from "@/lib/time/shanghai";
 
 function normalizeKeywords(keywords: string[]): string[] {
   return Array.from(
@@ -27,12 +28,53 @@ function normalizeKeywords(keywords: string[]): string[] {
 }
 
 export class SubscriptionService {
-  constructor(private readonly repository: RepositoryBundle) {}
+  constructor(
+    private readonly repository: RepositoryBundle,
+    private readonly now: () => number = Date.now,
+  ) {}
 
   async getBundle(userId: string): Promise<SubscriptionBundle> {
+    const [subscriptions, deliverySettings] = await Promise.all([
+      this.repository.listSubscriptions(userId),
+      this.repository.getDeliverySettings(userId),
+    ]);
+    const now = this.now();
+    const issueDate = shanghaiDate(now);
+    const from = new Date(`${issueDate}T00:00:00+08:00`).toISOString();
+    const to = new Date(now).toISOString();
+    const subscriptionsWithCounts = await Promise.all(
+      subscriptions.map(async (subscription) => {
+        const queries = Array.from(
+          new Set([subscription.topic, ...subscription.keywords]),
+        ).filter(Boolean);
+        try {
+          const results = await Promise.all(
+            queries.map((query) =>
+              this.repository.searchArticles({
+                query,
+                from,
+                to,
+                limit: 100,
+              }),
+            ),
+          );
+          const articleIds = new Set(
+            results.flatMap((articles) =>
+              articles.map((article) => article.id),
+            ),
+          );
+          return {
+            ...subscription,
+            todayUpdateCount: articleIds.size,
+          };
+        } catch {
+          return subscription;
+        }
+      }),
+    );
     return subscriptionBundleSchema.parse({
-      subscriptions: await this.repository.listSubscriptions(userId),
-      deliverySettings: await this.repository.getDeliverySettings(userId),
+      subscriptions: subscriptionsWithCounts,
+      deliverySettings,
     });
   }
 

@@ -6,6 +6,7 @@ import { DemoNewsProvider } from "@/lib/news/providers/demo-provider";
 import { NewsSearchService } from "@/lib/services/news-search-service";
 import { MemoryRepository } from "@/lib/repositories/memory-repository";
 import { DailyIssueService } from "@/lib/services/daily-issue-service";
+import { SubscriptionService } from "@/lib/services/subscription-service";
 import {
   ThemePosterService,
   TopicPosterService,
@@ -96,6 +97,62 @@ describe("领域 Service", () => {
     );
     expect(refreshed.data.dailyBriefing).toContain("商业财经");
     expect(refreshed.data.dailyBriefing).toContain("健康生活");
+  });
+
+  it("按北京时间当天的去重新闻动态统计订阅更新数", async () => {
+    const repository = new MemoryRepository(false);
+    const subscriptionService = new SubscriptionService(
+      repository,
+      () => NOW,
+    );
+    const now = new Date(NOW).toISOString();
+    await repository.replaceSubscriptions(
+      "demo-user",
+      [
+        {
+          id: "sub-ai",
+          userId: "demo-user",
+          topic: "人工智能",
+          keywords: ["大模型"],
+          enabled: true,
+          todayUpdateCount: 0,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+      { email: "", dailyDelivery: false, deliveryTime: "08:00" },
+    );
+    const article = getDemoArticles()[0];
+    await repository.upsertArticles([
+      {
+        ...article,
+        id: "today-ai",
+        title: "人工智能大模型取得新进展",
+        description: "人工智能产业迎来新的大模型产品。",
+        publishedAt: "2026-07-18T03:00:00.000Z",
+        canonicalUrl: "https://example.com/today-ai",
+        sourceUrl: "https://example.com/today-ai",
+        provider: "test-provider",
+        fetchedAt: now,
+        contentHash: "today-ai",
+      },
+      {
+        ...article,
+        id: "yesterday-ai",
+        title: "人工智能昨日动态",
+        description: "不应计入北京时间今天。",
+        publishedAt: "2026-07-17T15:59:59.000Z",
+        canonicalUrl: "https://example.com/yesterday-ai",
+        sourceUrl: "https://example.com/yesterday-ai",
+        provider: "test-provider",
+        fetchedAt: now,
+        contentHash: "yesterday-ai",
+      },
+    ]);
+
+    const bundle = await subscriptionService.getBundle("demo-user");
+
+    expect(bundle.subscriptions[0]?.todayUpdateCount).toBe(1);
   });
 
   it("主题海报在 Mock AI 下生成 3～5 篇", async () => {
