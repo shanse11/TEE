@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --no-audit --no-fund",
+  "installCommand": "npx --yes npm@10.8.2 ci --no-audit --no-fund",
   "crons": [
     {
       "path": "/api/cron/news-ingest",
